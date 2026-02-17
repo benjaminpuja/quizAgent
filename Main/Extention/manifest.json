@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "Moodle Stealth Solver",
+  "version": "1.1",
+  "description": "Löst das Quiz per konfigurierbarem Shortcut.",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://localhost:3000/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "commands": {
+    "solve_quiz": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y",
+        "mac": "Command+Shift+Y"
+      },
+      "description": "Startet den Solver"
+    }
+  }
+}

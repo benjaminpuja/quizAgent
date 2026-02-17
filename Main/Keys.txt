@@ -1,0 +1,3 @@
+const API_KEY = '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'; // setze ENV oder trage echten Key ein
+const MODEL = 'openai/gpt-oss-20b:free';
+const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';

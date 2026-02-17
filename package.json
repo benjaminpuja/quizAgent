@@ -1,0 +1,22 @@
+{
+  "name": "gpt-clipboard-bot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "clipboardy": "^2.3.0",
+    "dotenv": "^16.5.0",
+    "node-fetch": "^2.7.0",
+    "node-notifier": "^10.0.1",
+    "puppeteer": "^24.10.1",
+    "puppeteer-core": "^24.10.1",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  }
+}

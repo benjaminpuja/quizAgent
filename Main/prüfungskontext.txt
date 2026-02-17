@@ -1,0 +1,55 @@
+NetzökonomieNetzeffekte Erfolg? Benötigen kritische Masse.Metcalfe-Kern? Indirekte Netzeffekte.Qualität bei Info-Gütern egal? Nein, falsch.Schlechte Tech marktführend? Ja, via Netzeffekte möglich.Skalierung Digital? Mio. Kunden bei fixen Kosten (Wahr).Offene vs. Proprietär? Offen = weniger Lock-in; Proprietär = Marktmacht/Barrieren.Bremsen Standards Innovation? Nein, falsch.Strategie & GMWas ist ein Geschäftsmodell (GM)? DNA/Ertragsmechanik.Ertragsmodell Inhalt? Alle Einnahmen + Sponsoring.Produkt-Markt-Fit? Link zw. Architektur & Markt.Gassmann-Fragen? Wer? Was? Wie? Wert?Operativ vs. Strategisch? Nutzen vs. Aufbau von Potenzialen.Partnerschaft-Tradeoff? Sicherer, aber unflexibler.GM starr? Nein, iterativer Prozess.Value Prop & SkalierungValue Proposition (VP)? Kundennutzen; variabel.Strategische Ressourcen? Marken, Patente, Kunden.IT-Gefahr? Zu starke Integration hemmt Flexibilität.Start-up Fokus? Skalierbarkeit & Volumen prüfen.VP-Canvas Felder? Jobs, Pains, Gains, Products/Services.Lock-in & PraxisWechselkosten-Ursache? Zeit/Aufwand (Lock-in).Freie Software = Lock-in? Nein, falsch.Mensch-Maschine (H2M)? Kontext ist essenziell.Chemielieferant-Typ? Aktiver Partner.Gilder-Rechnung? 100 Mbit/s $\times 3 \times 3 \times 3 = 2700$ Mbit/s nach 3 J. (Faktor 27).
+Übungsfragen
+Netzeffekte: Welche Aussagen zu Netzeffekten sind richtig?
+Ertragsmodell: Welche Aussagen zum Ertragsmodell eines Geschäftsmodells sind richtig?
+Lock-In Effekt (Software): Als Unternehmer streben Sie durch den Einsatz von freier Software einen nachfrageseitigen Lock-In Effekt an. (Wahr/Falsch)
+Produkt-/Marktentwurf: Welcher Aspekt trifft auf den Produkt-/Marktentwurf zu?
+Preismodell: Welche Aussagen zum Preismodell eines Geschäftsmodells sind richtig?
+Value Proposition Canvas: Welche Aspekte werden im Value Proposition Canvas analysiert?
+Gilders Gesetz: Gehen Sie davon aus, dass die derzeitige maximale Übertragungsbandbreite bei 100 Mbit/s liegt. Wie hoch sollte die maximale Übertragungsbandbreite (in Mbit/s) laut Gesetz nach Gilder in drei Jahren sein?
+Definition Geschäftsmodell: Welche Definitionen für ein Geschäftsmodell sind richtig?
+Winner-takes-it-all: Erreicht ein Konkurrent am Markt eine kritische Masse, beginnt häufig das „Winner takes it all“-Prinzip zu greifen. (Wahr/Falsch)
+Partnerschaften: Stabile, langfristige Partnerschaften schränken i.d.R. die Flexibilität ein, geben jedoch Sicherheit in Bezug auf Planung und Qualität. Kommt es zu einem Partnerwechsel, sind flexible Strukturen [...] wichtig und nützlich. (Wahr/Falsch)
+Partnerarten (Szenarien): Zuordnung von Partnerarten (Aktiver Partner, Komplementärleistungserbringer, Trittbrettfahrer) zu Beispielen wie Weinbauern, ERP-Systemen auf Windows-Basis, Autoteilezulieferern und Modeshops.
+Ökonomische Begriffe: Zuordnung von Definitionen zu den Begriffen: Neue Ökonomie, Digitale Netzökonomie, Digitale Ökonomie, Internetökonomie.
+Zusammenhänge Netzökonomie: Welche Aussagen zu den Zusammenhängen einzelner Aspekte der digitalen Netzökonomie (Standards, Lock-In, Netzeffekte) sind richtig?
+Fixkosten/Digitalisierung: „If you can serve one customer, you can serve a million.“ Die Digitalisierung ermöglicht genau dies, weil die fixen Kosten unabhängig von der verkauften Stückzahl sehr niedrig gehalten werden können. (Wahr/Falsch)
+Neue Medien: Neue Medien können selbst agieren, sind räumlich und zeitlich unabhängig und simultan verfügbar. Neue Medien sind vernetzt und multimedial. Darüber hinaus können Menschen sowohl mit dem Medium als auch durch das Medium kommunizieren. (Wahr/Falsch)
+Vernetzung und Kontext: Bei welcher Art der Vernetzung ist besonders auf den Kontext zu achten? (Maschine zu Maschine, Mensch zu Mensch, Maschine zu Mensch)
+Standards: Welche Aussagen zu Standards (offene vs. proprietäre) sind richtig?
+Gassmann et al.: Welche Fragestellungen sollte ein Geschäftsmodell laut Gassmann et al. zumindest beantworten?
+Globalisierung: Welche Aussagen zur Globalisierung sind richtig?
+Ressourcen: Was sind Ressourcen im Sinne der internen Architektur der Leistungserstellung?
+E-Business: Welche Aussagen zu E-Business (E-Procurement, E-Commerce, etc.) sind richtig?
+GM-Entwicklung & Strategie: Welche Aussagen zu iterativen Prozessen, Geschäftsstrategie und Effizienz/Effektivität sind richtig?
+Innovation & Standards: Innovationen werden durch Standards (vor allem durch monopolartige Wettbewerbsstellungen) gebremst. (Wahr/Falsch)
+Technologie & Kundenzufriedenheit: Nach Stähler (2002) schaffen (neue) Technologien direkten (Mehr-) Wert für Kunden, indem sie (neue) Produkte oder Dienstleistungen ermöglichen, die wiederum direkt zu einer Steigerung der Kundenzufriedenheit führen. (Wahr/Falsch)
+Arthurs Gesetz: Erläuterung zu Selbstverstärkungseffekten und Wechselkosten. (Wahr/Falsch)
+Lock-In Effekte: Welche Aussagen zu Lock-In Effekten (nachfrageseitig, freie Software, Innovationsbremse) sind richtig?
+Value Proposition (Konstanz): Die Value Proposition bildet den konstanten Kern eines Geschäftsmodells. Sie darf in keinem Fall verändert werden. (Wahr/Falsch)
+Skalierbarkeit (Start-up): Welche Herausforderungen muss ein Start-Up im Bezug auf sein Geschäftsmodell meistern, um dem Wachstumspotenzial gewachsen zu sein?
+Bankwechsel-Szenario: Ein Kunde wechselt die Bank trotz Unzufriedenheit nicht, aus Angst vor dem Zeitaufwand der Umstellung. Welche Ursache eines Lock-Ins liegt vor?
+Strategisches vs. Operatives Handeln: Welche Aussagen zur Nutzung und zum Aufbau von Potenzialen sind richtig?
+Geschäftsmodell-Anpassung: Nachdem das Geschäftsmodell die überlebensnotwendige Basis ist, darf es, einmal definiert, in keinem Fall verändert werden. (Wahr/Falsch)
+Ursachen Lock-In: Welche Wirkungen können zu Lock-In Effekten führen? (Vernetzung, Vertrauen, Netzeffekte, Digitalisierung, Wechselkosten)
+Information als Produktionsmittel: Die digitale Netzökonomie ist geprägt durch die Quantität der Information; die Qualität spielt keine Rolle. (Wahr/Falsch)
+Digitale Netzökonomie (Merkmale): Welche Aussagen zur digitalen Netzökonomie (Netzeffekte, Standards, Digitalisierungsgrad) sind richtig?
+Skalierbarkeit (IT-Systeme): Welche Aussagen treffen auf die Skalierbarkeit von digitalen Geschäftsmodellen zu?
+Value Proposition (Details): Welche Aussagen zur Value Proposition (Kundennutzen, Lückenidentifikation, Einfluss von Partnern) sind richtig?
+Prüfungsfragen (2015–2017)
+Netzeffekte (2015): Welche Aussagen zu Netzeffekten (kritische Masse, technologische Überlegenheit, Abwarten der Käufer) sind richtig?
+Preismodelle (Hotel-Szenario): Welche Preismodelle (Nachfrage, Marktsegmente, Kosten, zeitliche Kriterien) kommen beim Hotel „KommUndBleib“ zum Tragen?
+Vernetzung (Digital): Welche Aussagen zu Vernetzung (M2M, Mensch-Maschine) sind richtig?
+Erlösarten (CollabSoft): Welche Erlösarten (direkt/indirekt, nutzungsabhängig/-unabhängig) kommen im Ertragsmodell von „CollabSoft“ vor?
+Digitalisierung (Sinn): Durch Digitalisierung kann man einfacher eine hohe Anzahl an Kunden befriedigen, ohne dass die variablen Kosten spürbar steigen. (Wahr/Falsch)
+Digitalisierung (Vorteile): Welche Aussagen zur Digitalisierung (Transformation analoger Daten, Übertragungsgeschwindigkeit/-kapazität) sind richtig?
+Value Proposition (Auswirkung): Auf welchen Faktor würde sich eine Änderung der Value Proposition in erster Linie auswirken? (Effizienz/Effektivität)
+Microsoft Office (Marktmacht): Warum können offene Standards die Marktposition von MS Office noch immer nicht richtig gefährden?
+Elemente der Architektur (Stähler): Über welche Elemente ist die Architektur der Leistungserstellung eines Geschäftsmodells nach Stähler (2002) definiert?
+Proprietäre Standards: Welche Aussagen zu proprietären Standards (Wettbewerbsfähigkeit, Markteintrittsbarrieren, Marktmacht) sind richtig?
+Netzeffekte (Kategorisierung): Zuordnung von Beispielen (Amazon, Facebook, Kodak, Skateboarder) zu den Kategorien: Positiv/Negativ und Direkter/Indirekter Netzeffekt.
+Wertschöpfungsstufen: Welche Aussagen zu Wertschöpfungsstufen der internen Architektur (Geschäftsprozessmodell, Partner, Erfüllung der Value Proposition) sind richtig?
+App-Strategie: Welche Strategien könnten funktionieren, um mit einer Sportstätten-App erfolgreich zu sein?
+Technologie im Kontext: Welche Aussagen zum Thema Technologie (strategische Ressource, Effizienzsteigerung, Wertschöpfung) sind richtig?
+Lock-In Kreislauf: Aus welchen Phasen besteht der Lock-In Kreislauf?
+
