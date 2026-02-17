@@ -10,8 +10,11 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "cheerio": "^1.2.0",
     "clipboardy": "^2.3.0",
+    "cors": "^2.8.6",
     "dotenv": "^16.5.0",
+    "express": "^5.2.1",
     "node-fetch": "^2.7.0",
     "node-notifier": "^10.0.1",
     "puppeteer": "^24.10.1",
