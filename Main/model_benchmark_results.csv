@@ -1,0 +1,8 @@
+Model,Accuracy (%),Avg Time (s),Completed Requests,Errors
+"arcee-ai/trinity-large-preview:free",100.00,0.371,4,""
+"arcee-ai/trinity-mini:free",100.00,0.434,4,""
+"nvidia/nemotron-3-nano-30b-a3b:free",100.00,0.669,4,""
+"stepfun/step-3.5-flash:free",75.00,3.789,3,"Status 429"
+"z-ai/glm-4.5-air:free",75.00,6.930,3,"Status 429"
+"nvidia/nemotron-nano-9b-v2:free",50.00,1.343,4,""
+"deepseek/deepseek-r1-0528:free",50.00,10.138,4,""

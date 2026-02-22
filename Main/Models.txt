@@ -1,0 +1,5 @@
+arcee-ai/trinity-large-preview:free,
+arcee-ai/trinity-mini:free,
+nvidia/nemotron-3-nano-30b-a3b:free,
+stepfun/step-3.5-flash:free,
+nvidia/nemotron-nano-9b-v2:free,

@@ -1,0 +1,2 @@
+z-ai/glm-4.5-air:free,
+deepseek/deepseek-r1-0528:free,

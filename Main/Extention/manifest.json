@@ -10,22 +10,36 @@
   "host_permissions": [
     "http://localhost:3000/*"
   ],
+  "action": {
+    "default_title": "Solve Quiz"
+  },
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"]
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ]
     }
   ],
   "commands": {
     "solve_quiz": {
       "suggested_key": {
         "default": "Ctrl+Shift+Y",
-        "mac": "Command+Shift+Y"
+        "mac": "Command+Shift+X"
       },
       "description": "Startet den Solver"
+    },
+    "stop_solver": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+U",
+        "mac": "Command+Shift+X"
+      },
+      "description": "Stoppt den Solver sofort"
     }
   }
 }

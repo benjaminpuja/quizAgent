@@ -1,4 +1,14 @@
 const fetch = require('node-fetch');
+const fs = require('fs');
+const path = require('path');
+
+const LOG_FILE = path.join(__dirname, '..', 'logs.txt');
+function logToFile(text) {
+    const timestamp = new Date().toLocaleTimeString();
+    try {
+        fs.appendFileSync(LOG_FILE, `\n[${timestamp}] [SERVER] \n${text}\n--------------------------------------------------\n`);
+    } catch (e) { }
+}
 require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
 
 const API_KEY = process.env.OPENROUTER_API_KEY;
@@ -34,74 +44,141 @@ function extractJson(aiText) {
  * @param {number} [retries=3] - Number of retries on 429/5xx errors
  * @returns {Promise<string|null>} The raw AI content string or null on failure
  */
-async function askAiWithRetry(messages, retries = 3) {
+const EXTRACTION_MODELS = [
+    'deepseek/deepseek-r1-0528:free' // Highly capable reasoning model for parsing huge contexts
+];
+
+const SOLVER_MODELS = [
+    'arcee-ai/trinity-large-preview:free', // Top accuracy, fastest time
+    'arcee-ai/trinity-mini:free',
+    'nvidia/nemotron-3-nano-30b-a3b:free',
+    'nvidia/nemotron-nano-9b-v2:free',
+    'stepfun/step-3.5-flash:free',
+    'z-ai/glm-4.5-air:free',
+    'liquid/lfm-2.5-1.2b-thinking:free' // Smaller thinking model
+];
+
+// NO ROTATION: Immediately use the fastest model directly
+async function askAiWithRetry(messages, customTemperature = 0) {
     if (!API_KEY) {
         console.error("❌ ERROR: OPENROUTER_API_KEY is missing in .env file.");
         return null;
     }
 
-    let lastError;
+    const targetModel = SOLVER_MODELS[0] || 'arcee-ai/trinity-mini:free';
 
-    for (let i = 0; i < retries; i++) {
-        try {
-            console.log(`📡 Sending request to AI (${MODEL_SOLVER}) - Attempt ${i + 1}/${retries}...`);
+    console.log(`\n⚡ SOLVER ACTION: Instantly executing with fastest model: ${targetModel}\n`);
 
-            const response = await fetch(OPENROUTER_URL, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${API_KEY}`,
-                    'Content-Type': 'application/json',
-                    'HTTP-Referer': 'http://localhost:3000',
-                    'X-Title': 'Moodle-Quiz-Agent'
-                },
-                body: JSON.stringify({
-                    model: MODEL_SOLVER,
-                    messages: messages,
-                    temperature: 0.1
-                })
-            });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // Fast fail if it hangs 15s
 
-            if (response.ok) {
-                const json = await response.json();
-                const content = json.choices?.[0]?.message?.content;
+    try {
+        console.log(`📡 Sending request to AI (${targetModel})...`);
+        const startTime = Date.now();
 
-                if (!content) {
-                    console.warn("⚠️ API returned empty content.");
-                    // Treat empty content as a retryable error if we have attempts left? 
-                    // Usually it's a model failure. Let's try once more if it's really empty.
-                    throw new Error("Empty content received from AI");
-                }
-                return content;
-            }
+        const requestBody = {
+            model: targetModel,
+            messages: messages,
+            temperature: customTemperature
+        };
 
-            // Handle errors
-            const errorText = await response.text();
-            if (response.status === 429 || response.status >= 500) {
-                // Formatting backoff
-                const backoff = 1000 * Math.pow(2, i);
-                console.warn(`⚠️ API Error ${response.status}: ${errorText}. Retrying in ${backoff}ms...`);
-                await new Promise(r => setTimeout(r, backoff));
-                continue;
-            } else {
-                // Client error (400, 401, etc) - Do not retry
-                console.error(`❌ Fatal API Error ${response.status}: ${errorText}`);
-                return null;
-            }
+        logToFile(`--- SOLVER (${targetModel}) PAYLOAD ---\n${JSON.stringify(requestBody, null, 2)}`);
 
-        } catch (error) {
-            lastError = error;
-            const backoff = 1000 * Math.pow(2, i);
-            console.error(`❌ Network Error on attempt ${i + 1}: ${error.message}. Retrying in ${backoff}ms...`);
-            await new Promise(r => setTimeout(r, backoff));
+        const response = await fetch(OPENROUTER_URL, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${API_KEY}`,
+                'Content-Type': 'application/json',
+                'HTTP-Referer': 'http://localhost:3000',
+                'X-Title': 'Moodle-Quiz-Solver'
+            },
+            body: JSON.stringify(requestBody),
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+        const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+
+        if (response.ok) {
+            console.log(`⏱️ Success! Model ${targetModel} took ${duration} seconds.`);
+            const json = await response.json();
+            logToFile(`--- SOLVER (${targetModel}) RAW JSON RESPONSE ---\n${JSON.stringify(json, null, 2)}`);
+            return json.choices?.[0]?.message?.content || null;
         }
+
+        const errorText = await response.text();
+        console.warn(`⚠️ Model ${targetModel} instantly failed (${response.status}): ${errorText}`);
+        return null;
+
+    } catch (error) {
+        clearTimeout(timeoutId);
+        console.error(`❌ Network error with ${targetModel}: ${error.message}`);
+        return null;
+    }
+}
+
+/**
+ * Sends a request to a specific AI model without retries/rotation.
+ * Uses exact specified model.
+ */
+async function askSpecificAi(model, messages, customTemperature = 0.1) {
+    if (!API_KEY) {
+        console.error("❌ ERROR: OPENROUTER_API_KEY is missing in .env file.");
+        return null;
     }
 
-    console.error("❌ Failed to get AI response after multiple retries.");
-    if (lastError) console.error(lastError);
-    return null;
+    try {
+        console.log(`📡 Sending targeted request to AI (${model})...`);
+        const startTime = Date.now();
+
+        const requestBody = {
+            model: model,
+            messages: messages,
+            temperature: customTemperature
+        };
+
+        logToFile(`--- EXTRACTOR (${model}) PAYLOAD ---\n${JSON.stringify(requestBody, null, 2).substring(0, 1500)}... [TRUNCATED]`);
+
+        const response = await fetch(OPENROUTER_URL, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${API_KEY}`,
+                'Content-Type': 'application/json',
+                'HTTP-Referer': 'http://localhost:3000',
+                'X-Title': 'Moodle-Quiz-Agent-Extractor'
+            },
+            body: JSON.stringify(requestBody)
+        });
+
+        const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+
+        if (response.ok) {
+            console.log(`⏱️ Success! Extractor ${model} took ${duration} s.`);
+            const json = await response.json();
+            logToFile(`--- EXTRACTOR (${model}) RAW JSON RESPONSE ---\n${JSON.stringify(json, null, 2)}`);
+            return json.choices?.[0]?.message?.content || null;
+        }
+
+        const errorText = await response.text();
+        console.warn(`⚠️ Extractor ${model} failed (${response.status}): ${errorText}`);
+
+        // Primitive fallback if the main extractor fails
+        if (model === EXTRACTION_MODELS[0] && EXTRACTION_MODELS.length > 1) {
+            console.log(`🔄 Trying backup extractor...`);
+            return await askSpecificAi(EXTRACTION_MODELS[1], messages, customTemperature);
+        }
+
+        return null;
+
+    } catch (error) {
+        console.error(`❌ Network error with Extractor ${model}: ${error.message}`);
+        return null;
+    }
 }
 
 module.exports = {
     askAiWithRetry,
-    extractJson
+    askSpecificAi,
+    extractJson,
+    EXTRACTION_MODELS
 };

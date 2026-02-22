@@ -1,0 +1,8 @@
+openai/gpt-oss-120b:free,
+meta-llama/llama-3.3-70b-instruct:free,
+qwen/qwen3-next-80b-a3b-instruct:free,
+google/gemma-3-27b-it:free,
+cognitivecomputations/dolphin-mistral-24b-venice-edition:free,
+mistralai/mistral-small-3.1-24b-instruct:free,
+qwen/qwen3-4b:free,
+meta-llama/llama-3.2-3b-instruct:free,
