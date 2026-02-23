@@ -30,3 +30,5 @@ keys.txt
 # Logs
 logs.txt
 Main/logs.txt
+Main/test_results.txt
+test_results.txt
