@@ -95,11 +95,10 @@ app.post('/solve', async (req, res) => {
             allQuestionsText += `Question ${q.number}: '${q.question}'\nOptions:\n${optText}\n\n`;
         });
 
-        const extractSystem = `You are a data extractor. You will be given a massive CONTEXT and a list of QUESTIONS.
-Your job is to read the CONTEXT and extract ONLY the facts explicitly relevant to answering EACH question.
-If the information to answer a question is NOT found directly in the CONTEXT, you must explicitly state that by strictly outputting "NOT_FOUND" for that question.
-Output format: A strictly formatted JSON map where the key is the Question Number, and the value is the extracted context.
-Example: { "1": "extracted facts go here...", "2": "NOT_FOUND", "3": "more facts..." }`;
+        const extractSystemFilePath = path.join(__dirname, 'extractor_prompt.txt');
+        const extractSystem = fs.existsSync(extractSystemFilePath)
+            ? fs.readFileSync(extractSystemFilePath, 'utf-8').trim()
+            : `You are a data extractor. You will be given a massive CONTEXT and a list of QUESTIONS.\nYour job is to read the CONTEXT and extract ONLY the facts explicitly relevant to answering EACH question.\nIf the information to answer a question is NOT found directly in the CONTEXT, you must explicitly state that by strictly outputting "NOT_FOUND" for that question.\nOutput format: A strictly formatted JSON map where the key is the Question Number, and the value is the extracted context.\nExample: { "1": "extracted facts go here...", "2": "NOT_FOUND", "3": "more facts..." }`;
 
         const extractUser = `CONTEXT:\n${fileContext}\n\nQUESTIONS to extract context for:\n${allQuestionsText}`;
 
@@ -143,11 +142,10 @@ Example: { "1": "extracted facts go here...", "2": "NOT_FOUND", "3": "more facts
             console.log(` [Step 2] Asking Solver Model...`);
             sendEvent({ status: `Solving Question ${q.number}...`, progress: `Step 2/2` });
 
-            const solveSystem = `You are an expert exam solver. Solve the question using the provided Context.
-Reply ONLY with a formated JSON object. No explanations outside the JSON.
-Format: { "answer": index } 
-(Value = 0-BASED Index of correct option).
-IMPORTANT: The first option is ALWAYS index 0. The second is 1. The third is 2. ONLY OUTPUT THE EXACT OPTION INDEX AS AN INTEGER starting from 0.`;
+            const solveSystemFilePath = path.join(__dirname, 'solver_prompt.txt');
+            const solveSystem = fs.existsSync(solveSystemFilePath)
+                ? fs.readFileSync(solveSystemFilePath, 'utf-8').trim()
+                : `You are an expert exam solver. Solve the question using the provided Context.\nReply ONLY with a formated JSON object. No explanations outside the JSON.\nFormat: { "answer": index } \n(Value = 0-BASED Index of correct option).\nIMPORTANT: The first option is ALWAYS index 0. The second is 1. The third is 2. ONLY OUTPUT THE EXACT OPTION INDEX AS AN INTEGER starting from 0.`;
 
             const solveUser = `Context: ${qContext}\n\n${rawQuestionString}`;
 
