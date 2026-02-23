@@ -6,16 +6,16 @@ const { notify } = require('./lib/Notifier');
 
 (async () => {
     const userText = clipboardy.readSync().trim();
-    if (!userText) return console.log('📋 Clipboard is empty.');
+    if (!userText) return console.log(' Clipboard is empty.');
 
     // --- LOAD CONTEXT ---
     let fullContext = '';
     try {
-        const fileContext = fs.readFileSync(path.join(__dirname, 'prüfungskontext.txt'), 'utf-8');
+        const fileContext = fs.readFileSync(path.join(__dirname, 'pruefungskontext.txt'), 'utf-8');
         const context = fs.readFileSync(path.join(__dirname, 'Context.txt'), 'utf-8');
         fullContext = `${context}\n\n${fileContext}`;
     } catch (e) {
-        console.warn(`⚠️ Could not load context files: ${e.message}`);
+        console.warn(` Could not load context files: ${e.message}`);
     }
 
     // --- ASK AI ---
@@ -38,10 +38,10 @@ const { notify } = require('./lib/Notifier');
 
     if (answer) {
         clipboardy.writeSync(answer);
-        console.log('✅ Answer copied to clipboard.');
+        console.log(' Answer copied to clipboard.');
         notify(answer, 'LLM Answer');
     } else {
-        console.error('⚠️ No answer received.');
+        console.error(' No answer received.');
         notify('No answer received', 'LLM Error');
     }
 })();

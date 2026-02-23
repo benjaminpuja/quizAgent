@@ -1,2 +1,1 @@
-z-ai/glm-4.5-air:free,
-deepseek/deepseek-r1-0528:free,
+qwen/qwen3-vl-30b-a3b-thinking,

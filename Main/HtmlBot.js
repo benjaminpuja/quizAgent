@@ -9,35 +9,35 @@ const { notify } = require('./lib/Notifier');
     try {
         const rawHtml = clipboardy.readSync().trim();
         if (!rawHtml || !rawHtml.includes('<')) {
-            return console.log('📋 Clipboard empty or no HTML.');
+            return console.log(' Clipboard empty or no HTML.');
         }
 
-        console.log('⏳ extracting questions...');
+        console.log(' extracting questions...');
         const questions = extractQuestionsClipboard(rawHtml);
 
         if (questions.length === 0) {
-            console.error('❌ No questions found in clipboard HTML.');
+            console.error(' No questions found in clipboard HTML.');
             return;
         }
 
-        console.log(`✅ ${questions.length} questions extracted.`);
+        console.log(` ${questions.length} questions extracted.`);
 
         const cleanQuestionList = questions
             .map(q => `Question ${q.index}: ${q.question}\nOptions: ${q.optionsString}`)
             .join('\n---\n');
 
-        console.log('\n--- 📝 QUESTION LIST ---\n', cleanQuestionList, '\n----------------------------------\n');
+        console.log('\n---  QUESTION LIST ---\n', cleanQuestionList, '\n----------------------------------\n');
 
         // --- LOAD CONTEXT ---
-        console.log('⏳ Loading Context...');
+        console.log(' Loading Context...');
         let fullContext = '';
         try {
-            const fileContext = fs.readFileSync(path.join(__dirname, 'prüfungskontext.txt'), 'utf-8');
+            const fileContext = fs.readFileSync(path.join(__dirname, 'pruefungskontext.txt'), 'utf-8');
             const context = fs.readFileSync(path.join(__dirname, 'Context.txt'), 'utf-8');
             fullContext = `${context}\n\n${fileContext}`;
-            console.log(`✅ Context loaded (${fullContext.length} chars).`);
+            console.log(` Context loaded (${fullContext.length} chars).`);
         } catch (e) {
-            console.warn(`⚠️ Could not load context files: ${e.message}`);
+            console.warn(` Could not load context files: ${e.message}`);
         }
 
         // --- ASK AI ---
@@ -53,15 +53,15 @@ const { notify } = require('./lib/Notifier');
 
         if (finalAnswer) {
             clipboardy.writeSync(finalAnswer);
-            console.log('\n--- 💡 BOT SOLUTION ---');
+            console.log('\n---  BOT SOLUTION ---');
             console.log(finalAnswer);
             notify(finalAnswer, 'Bot Solution');
-            console.log('\n---------------------\n✅ Solution copied to clipboard.');
+            console.log('\n---------------------\n Solution copied to clipboard.');
         } else {
-            console.error('\n❌ No solution received from AI.');
+            console.error('\n No solution received from AI.');
         }
 
     } catch (e) {
-        console.error('\n❌ Critical Error:', e.message);
+        console.error('\n Critical Error:', e.message);
     }
 })();

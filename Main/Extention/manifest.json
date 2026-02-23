@@ -1,17 +1,19 @@
 {
   "manifest_version": 3,
   "name": "Moodle Stealth Solver",
-  "version": "1.1",
-  "description": "Löst das Quiz per konfigurierbarem Shortcut.",
+  "version": "1.2",
+  "description": "Loest das Quiz per konfigurierbarem Shortcut.",
   "permissions": [
     "activeTab",
-    "scripting"
+    "scripting",
+    "storage"
   ],
   "host_permissions": [
     "http://localhost:3000/*"
   ],
   "action": {
-    "default_title": "Solve Quiz"
+    "default_title": "Solve Quiz",
+    "default_popup": "popup.html"
   },
   "background": {
     "service_worker": "background.js"

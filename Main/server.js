@@ -3,7 +3,7 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const { extractQuestionsServer } = require('./lib/Scraper');
-const { askAiWithRetry, askSpecificAi, extractJson, EXTRACTION_MODELS } = require('./lib/AiService');
+const { askAiWithRetry, askSpecificAi, extractJson, EXTRACTION_MODELS, SOLVER_MODELS } = require('./lib/AiService');
 
 // Helper for file logging
 function logToFile(text) {
@@ -12,17 +12,17 @@ function logToFile(text) {
     try {
         fs.appendFileSync(logPath, `\n[${timestamp}] \n${text}\n--------------------------------------------------\n`);
     } catch (e) {
-        console.error("Failed to write to logs.txt:", e);
+        console.error('Failed to write to logs.txt:', e);
     }
 }
 
 // Load context on startup
 let fileContext = '';
 try {
-    fileContext = fs.readFileSync(path.join(__dirname, 'prüfungskontext.txt'), 'utf-8');
-    console.log(`✅ Loaded PRÜFUNGSKONTEXT (${fileContext.length} chars)`);
+    fileContext = fs.readFileSync(path.join(__dirname, 'pruefungskontext.txt'), 'utf-8');
+    console.log(` Loaded PRUeFUNGSKONTEXT (${fileContext.length} chars)`);
 } catch (e) {
-    console.warn(`⚠️ Could not load context file: ${e.message}`);
+    console.warn(` Could not load context file: ${e.message}`);
 }
 
 // App Setup
@@ -35,7 +35,7 @@ app.use(express.json({ limit: '200mb' })); // Allow huge HTML payloads (increase
 
 // Logging
 app.use((req, res, next) => {
-    console.log(`\n[${new Date().toLocaleTimeString()}] 📨 ${req.method} Request to ${req.url}`);
+    console.log(`\n[${new Date().toLocaleTimeString()}]  ${req.method} Request to ${req.url}`);
     next();
 });
 
@@ -45,25 +45,25 @@ app.get('/ping', (req, res) => {
 });
 
 app.post('/solve', async (req, res) => {
-    console.log(`\n[${new Date().toLocaleTimeString()}] ⚡️ Processing Quiz...`);
+    console.log(`\n[${new Date().toLocaleTimeString()}]  Processing Quiz...`);
 
     try {
         const { html } = req.body;
         if (!html) {
-            console.error("❌ No HTML in body.");
+            console.error(' No HTML in body.');
             return res.status(400).json({ error: 'HTML missing' });
         }
-        console.log(`📥 Body received. HTML size: ${(html.length / 1024 / 1024).toFixed(2)} MB`);
+        console.log(` Body received. HTML size: ${(html.length / 1024 / 1024).toFixed(2)} MB`);
 
-        console.log(`📄 Received HTML (${html.length} chars). Parsing...`);
+        console.log(` Received HTML (${html.length} chars). Parsing...`);
 
         // 1. Scrape Questions
         const extractedQuestions = extractQuestionsServer(html);
 
-        console.log(`✅ Extracted ${extractedQuestions.length} questions.`);
+        console.log(` Extracted ${extractedQuestions.length} questions.`);
 
         if (extractedQuestions.length === 0) {
-            console.warn("⚠️ No questions found (Wrong page?)");
+            console.warn(' No questions found (Wrong page?)');
             return res.json({ targets: [] });
         }
 
@@ -87,12 +87,12 @@ app.post('/solve', async (req, res) => {
 
         // Step A: Bulk Extraction with R1
         const extractorModel = EXTRACTION_MODELS && EXTRACTION_MODELS.length > 0 ? EXTRACTION_MODELS[0] : 'deepseek/deepseek-r1-0528:free';
-        console.log(`🧠 [Step 1] Asking ${extractorModel} for BULK context extraction...`);
+        console.log(` [Step 1] Asking ${extractorModel} for BULK context extraction...`);
 
-        let allQuestionsText = "";
+        let allQuestionsText = '';
         extractedQuestions.forEach(q => {
             const optText = q.options.map(o => `[${o.index}] ${o.text}`).join('\n');
-            allQuestionsText += `Question ${q.number}: "${q.question}"\nOptions:\n${optText}\n\n`;
+            allQuestionsText += `Question ${q.number}: '${q.question}'\nOptions:\n${optText}\n\n`;
         });
 
         const extractSystem = `You are a data extractor. You will be given a massive CONTEXT and a list of QUESTIONS.
@@ -105,7 +105,7 @@ Example: { "1": "extracted facts go here...", "2": "NOT_FOUND", "3": "more facts
 
         logToFile(`--- BULK EXTRACTION PROMPT ---\nMODEl: ${extractorModel}\nSYSTEM:\n${extractSystem}\n\nUSER:\nCONTEXT: [Omitted for brevity]\nQUESTIONS:\n${allQuestionsText}`);
 
-        sendEvent({ status: "Extracting Context...", progress: "Step 1/2" });
+        sendEvent({ status: 'Extracting Context...', progress: 'Step 1/2' });
 
         const r1Response = await askSpecificAi(extractorModel, [
             { role: 'system', content: extractSystem },
@@ -120,7 +120,7 @@ Example: { "1": "extracted facts go here...", "2": "NOT_FOUND", "3": "more facts
             try {
                 extractedContexts = JSON.parse(cleanR1Raw);
             } catch (e) {
-                console.warn("⚠️ Could not parse R1 bulk extraction, using empty contexts.");
+                console.warn(' Could not parse R1 bulk extraction, using empty contexts.');
             }
         }
 
@@ -128,19 +128,19 @@ Example: { "1": "extracted facts go here...", "2": "NOT_FOUND", "3": "more facts
         let solvedCount = 0;
         for (let i = 0; i < extractedQuestions.length; i++) {
             const q = extractedQuestions[i];
-            console.log(`\n─────────❓ Question ${q.number} ─────────`);
+            console.log(`\n Question ${q.number} `);
 
             const optText = q.options.map(o => `[${o.index}] ${o.text}`).join('\n');
-            const rawQuestionString = `Question: "${q.question}"\nOptions:\n${optText}`;
+            const rawQuestionString = `Question: '${q.question}'\nOptions:\n${optText}`;
 
-            let qContext = extractedContexts[q.number.toString()] || "NOT_FOUND";
+            let qContext = extractedContexts[q.number.toString()] || 'NOT_FOUND';
 
-            if (qContext === "NOT_FOUND") {
-                console.log(`⚠️ Extractor reported: Information NOT in context for Q${q.number}.`);
-                qContext = "No specific context found. Answer using your own general reasoning and knowledge.";
+            if (qContext === 'NOT_FOUND') {
+                console.log(` Extractor reported: Information NOT in context for Q${q.number}.`);
+                qContext = 'No specific context found. Answer using your own general reasoning and knowledge.';
             }
 
-            console.log(`🤖 [Step 2] Asking Solver Model...`);
+            console.log(` [Step 2] Asking Solver Model...`);
             sendEvent({ status: `Solving Question ${q.number}...`, progress: `Step 2/2` });
 
             const solveSystem = `You are an expert exam solver. Solve the question using the provided Context.
@@ -151,42 +151,106 @@ IMPORTANT: The first option is ALWAYS index 0. The second is 1. The third is 2. 
 
             const solveUser = `Context: ${qContext}\n\n${rawQuestionString}`;
 
-            logToFile(`--- Q${q.number} SOLVER PROMPT ---\nSYSTEM:\n${solveSystem}\n\nUSER:\n${solveUser}`);
+            // We need 3 different models for consensus
+            const targetModels = SOLVER_MODELS.slice(0, 3);
 
-            const aiRawResponse = await askAiWithRetry([
-                { role: 'system', content: solveSystem },
-                { role: 'user', content: solveUser }
-            ]);
-
-            logToFile(`--- Q${q.number} SOLVER RESPONSE ---\n${aiRawResponse}`);
-            console.log("💬 Solver Response:", aiRawResponse ? aiRawResponse.substring(0, 100).replace(/\n/g, ' ') : "NULL");
-
-            if (!aiRawResponse) {
-                console.error(`❌ AI did not respond for question ${q.number}.`);
-                continue;
+            if (targetModels.length < 3) {
+                console.warn(" WARNING: Less than 3 solver models configured. Consensus logic might fall back to fewer models.");
             }
 
-            const cleanJsonStr = extractJson(aiRawResponse);
+            let attempt = 0;
+            const maxAttempts = 3;
+            let finalAnswer = null;
+            let consensusReached = false;
 
-            if (cleanJsonStr) {
-                try {
-                    const parsed = JSON.parse(cleanJsonStr);
-                    if (parsed.answer !== undefined) {
-                        const targetId = q.options.find(o => o.index == parsed.answer)?.id;
-                        if (targetId) {
-                            solvedCount++;
-                            sendEvent({ questionNum: q.number, targetId: targetId });
-                            console.log(`🎯 Solved Q${q.number}. Streaming: ${targetId}`);
-                        } else {
-                            console.warn(`⚠️ Target ID not found for Option ${parsed.answer}`);
+            while (attempt < maxAttempts && !consensusReached) {
+                attempt++;
+                console.log(`\n [Step 2] Asking 3 Solver Models (Attempt ${attempt}/${maxAttempts})...`);
+                if (attempt === 1) sendEvent({ status: `Solving Question ${q.number} (Attempt ${attempt})...`, progress: `Step 2/2` });
+
+                logToFile(`--- Q${q.number} SOLVER PROMPT (Attempt ${attempt}) ---\nSYSTEM:\n${solveSystem}\n\nUSER:\n${solveUser}`);
+
+                // Send 3 requests concurrently
+                const solverPromises = targetModels.map(model =>
+                    askAiWithRetry([
+                        { role: 'system', content: solveSystem },
+                        { role: 'user', content: solveUser }
+                    ], 0, model)
+                );
+
+                const responsesRaw = await Promise.all(solverPromises);
+
+                // Parse answers
+                const answers = [];
+                for (let j = 0; j < responsesRaw.length; j++) {
+                    const raw = responsesRaw[j];
+                    const modelName = targetModels[j];
+                    if (!raw) {
+                        console.error(` ${modelName} returned NULL.`);
+                        continue;
+                    }
+
+                    const cleanJsonStr = extractJson(raw);
+                    if (cleanJsonStr) {
+                        try {
+                            const parsed = JSON.parse(cleanJsonStr);
+                            if (parsed.answer !== undefined) {
+                                answers.push(parsed.answer);
+                                console.log(` ${modelName} chose Option [${parsed.answer}]`);
+                            }
+                        } catch (e) {
+                            console.error(` Failed to parse JSON from ${modelName}`);
+                        }
+                    } else {
+                        console.error(` No valid JSON from ${modelName}`);
+                    }
+                }
+
+                logToFile(`--- Q${q.number} SOLVER RESPONSES (Attempt ${attempt}) ---\nAnswers Collected: ${JSON.stringify(answers)}`);
+
+                // Check for consensus (majority vote)
+                if (answers.length > 0) {
+                    const counts = {};
+                    let maxCount = 0;
+                    let mostFrequentAnswer = null;
+
+                    for (const ans of answers) {
+                        counts[ans] = (counts[ans] || 0) + 1;
+                        if (counts[ans] > maxCount) {
+                            maxCount = counts[ans];
+                            mostFrequentAnswer = ans;
                         }
                     }
-                } catch (e) {
-                    console.error("❌ Failed to parse Solver JSON.");
-                    sendEvent({ error: `JSON Parse failed for Q${q.number}` });
+
+                    // For 3 models, consensus is 2+ matching answers.
+                    // If we only got 1 or 2 answers total, we just take the most frequent.
+                    if (maxCount >= 2 || (answers.length < 3 && maxCount >= 1)) {
+                        finalAnswer = mostFrequentAnswer;
+                        consensusReached = true;
+                        console.log(` Consensus reached! Option [${finalAnswer}] won with ${maxCount} votes.`);
+                    } else if (answers.length === 3 && maxCount === 1) {
+                        console.log(` ⚠️ EXACT TIE! All 3 models returned different answers. Retrying...`);
+                        sendEvent({ status: `Retrying Question ${q.number} (Tie-Breaker)...` });
+                    }
+                } else {
+                    console.log(` ⚠️ All 3 models failed to return a valid answer. Retrying...`);
+                    // Backoff slightly
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+            }
+
+            if (finalAnswer !== null) {
+                const targetId = q.options.find(o => o.index == finalAnswer)?.id;
+                if (targetId) {
+                    solvedCount++;
+                    sendEvent({ questionNum: q.number, targetId: targetId });
+                    console.log(` Solved Q${q.number}. Streaming ID: ${targetId}`);
+                } else {
+                    console.warn(` Target ID not found for Option ${finalAnswer}`);
                 }
             } else {
-                console.error("❌ Valid JSON block not found in Solver output.");
+                console.error(` ❌ FAILED Q${q.number}: No consensus reached after ${maxAttempts} attempts.`);
+                sendEvent({ error: `Failed Q${q.number} (No Consensus)` });
             }
 
             // Rate limit delay (Delay before next question solver)
@@ -196,12 +260,12 @@ IMPORTANT: The first option is ALWAYS index 0. The second is 1. The third is 2. 
             }
         }
 
-        console.log(`\n🚀 Finished streaming. Solved ${solvedCount} questions.`);
+        console.log(`\n Finished streaming. Solved ${solvedCount} questions.`);
         sendEvent({ done: true });
         res.end(); // Close stream
 
     } catch (error) {
-        console.error("❌ CRITICAL SERVER ERROR:", error);
+        console.error(' CRITICAL SERVER ERROR:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -209,7 +273,7 @@ IMPORTANT: The first option is ALWAYS index 0. The second is 1. The third is 2. 
 // Server Start
 const server = app.listen(PORT, () => {
     console.log(`\n--------------------------------------------------`);
-    console.log(`🤖 DEBUG-SERVER ready at http://localhost:${PORT}`);
+    console.log(` DEBUG-SERVER ready at http://localhost:${PORT}`);
     console.log(`Waiting for requests...`);
     console.log(`--------------------------------------------------\n`);
 });
@@ -218,19 +282,19 @@ const server = app.listen(PORT, () => {
 setInterval(() => { }, 1000); // Hack to keep process alive if Express fails to
 
 process.on('exit', (code) => {
-    console.log(`🛑 Process is EXITING with code: ${code}`);
+    console.log(` Process is EXITING with code: ${code}`);
 });
 
 process.on('SIGINT', () => {
-    console.log('🛑 Received SIGINT. Shutting down gracefully.');
+    console.log(' Received SIGINT. Shutting down gracefully.');
     process.exit();
 });
 
 // Global Error Handlers
 process.on('uncaughtException', (err) => {
-    console.error('💥 UNCAUGHT EXCEPTION:', err);
+    console.error(' UNCAUGHT EXCEPTION:', err);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-    console.error('💥 UNHANDLED REJECTION:', reason);
+    console.error(' UNHANDLED REJECTION:', reason);
 });

@@ -14,7 +14,7 @@ function logToFile(text) {
     try {
         fs.appendFileSync(LOG_FILE, `\n[${timestamp}] [BENCHMARK] \n${text}\n--------------------------------------------------\n`);
     } catch (e) {
-        console.error("Failed to write to logs.txt:", e);
+        console.error('Failed to write to logs.txt:', e);
     }
 }
 
@@ -22,8 +22,8 @@ function logToFile(text) {
 const QUESTIONS = [
     {
         id: 1,
-        text: `Solve this logic puzzle. Return ONLY a JSON object with the correct answer index (0-based) in a "answer" property.
-Question: "If A is faster than B, and B is faster than C, which one is the slowest?"
+        text: `Solve this logic puzzle. Return ONLY a JSON object with the correct answer index (0-based) in a 'answer' property.
+Question: 'If A is faster than B, and B is faster than C, which one is the slowest?'
 Options:
 0. A
 1. B
@@ -33,8 +33,8 @@ Options:
     },
     {
         id: 2,
-        text: `Solve this math problem. Return ONLY a JSON object with the correct answer index (0-based) in a "answer" property.
-Question: "What is 15 * 12 + 8?"
+        text: `Solve this math problem. Return ONLY a JSON object with the correct answer index (0-based) in a 'answer' property.
+Question: 'What is 15 * 12 + 8?'
 Options:
 0. 180
 1. 188
@@ -44,8 +44,8 @@ Options:
     },
     {
         id: 3,
-        text: `Solve this riddle. Return ONLY a JSON object with the correct answer index (0-based) in a "answer" property.
-Question: "I speak without a mouth and hear without ears. I have no body, but I come alive with wind. What am I?"
+        text: `Solve this riddle. Return ONLY a JSON object with the correct answer index (0-based) in a 'answer' property.
+Question: 'I speak without a mouth and hear without ears. I have no body, but I come alive with wind. What am I?'
 Options:
 0. An Echo
 1. A Shadow
@@ -55,8 +55,8 @@ Options:
     },
     {
         id: 4,
-        text: `Solve this tricky scenario. Return ONLY a JSON object with the correct answer index (0-based) in a "answer" property.
-Question: "A bat and a ball cost $1.10 in total. The bat costs $1.00 more than the ball. How much does the ball cost?"
+        text: `Solve this tricky scenario. Return ONLY a JSON object with the correct answer index (0-based) in a 'answer' property.
+Question: 'A bat and a ball cost $1.10 in total. The bat costs $1.00 more than the ball. How much does the ball cost?'
 Options:
 0. $0.10
 1. $0.05
@@ -88,7 +88,7 @@ function loadModels() {
         // Deduplicate
         return [...new Set(allModels)];
     } catch (e) {
-        console.error("❌ Could not read models", e);
+        console.error(' Could not read models', e);
         process.exit(1);
     }
 }
@@ -105,7 +105,7 @@ async function testModelQuestion(model, question) {
         const requestBody = {
             model: model,
             messages: [
-                { role: 'system', content: 'You are a smart assistant. Output JSON only: {"answer": index}' },
+                { role: 'system', content: 'You are a smart assistant. Output JSON only: {'answer': index}' },
                 { role: 'user', content: question.text }
             ],
             // Setting temperature 0 for more deterministic answers
@@ -138,19 +138,19 @@ async function testModelQuestion(model, question) {
 
         if (!response.ok) {
             const err = await response.text();
-            console.log(`      ❌ Failed (Q${question.id} Status ${response.status})`);
+            console.log(`       Failed (Q${question.id} Status ${response.status})`);
             logToFile(`--- TARGET: ${model} | Q${question.id} HTTP ERROR ---\nTook: ${duration}s\nStatus: ${response.status}\nResponse:\n${err}`);
             return { success: false, time: null, error: `Status ${response.status}` };
         }
 
         const json = await response.json();
-        const content = json.choices?.[0]?.message?.content || "";
+        const content = json.choices?.[0]?.message?.content || '';
 
         logToFile(`--- TARGET: ${model} | Q${question.id} SUCCESS ---\nTook: ${duration}s\nRAW JSON RESPONSE:\n${JSON.stringify(json, null, 2)}\n\nEXTRACTED CONTENT:\n${content}`);
 
         // Validation
         let isCorrect = false;
-        if (content.includes(`"answer": ${question.correctIndex}`) || content.includes(`: ${question.correctIndex}`)) {
+        if (content.includes(`'answer': ${question.correctIndex}`) || content.includes(`: ${question.correctIndex}`)) {
             isCorrect = true;
         } else if (content.includes(question.correctIndex.toString())) {
             // Loose check
@@ -177,8 +177,8 @@ async function testModelQuestion(model, question) {
     } catch (e) {
         clearTimeout(timeoutId);
         let errMsg = e.message;
-        if (e.name === 'AbortError') errMsg = "Request TIMED OUT (AbortError after 45s)";
-        console.log(`      💥 Error Q${question.id}: ${errMsg}`);
+        if (e.name === 'AbortError') errMsg = 'Request TIMED OUT (AbortError after 45s)';
+        console.log(`       Error Q${question.id}: ${errMsg}`);
         logToFile(`--- TARGET: ${model} | Q${question.id} FATAL EXCEPTION ---\nError: ${errMsg}\nTook: ${(Date.now() - startTime) / 1000}s`);
         return { success: false, time: null, error: errMsg };
     }
@@ -186,7 +186,7 @@ async function testModelQuestion(model, question) {
 
 // 4. Test Model over all questions
 async function evaluateModel(model) {
-    console.log(`\n🧪 Evaluating: ${model}...`);
+    console.log(`\n Evaluating: ${model}...`);
     let correctCount = 0;
     let totalTime = 0;
     let successCount = 0;
@@ -198,7 +198,7 @@ async function evaluateModel(model) {
             successCount++;
             totalTime += result.time;
             if (result.isCorrect) correctCount++;
-            console.log(`   - Q${q.id}: ${result.isCorrect ? '✅ Right' : '❌ Wrong'} (${result.time.toFixed(2)}s) -> ${result.content.substring(0, 40).replace(/\n/g, '')}`);
+            console.log(`   - Q${q.id}: ${result.isCorrect ? ' Right' : ' Wrong'} (${result.time.toFixed(2)}s) -> ${result.content.substring(0, 40).replace(/\n/g, '')}`);
         } else {
             errors.push(result.error);
         }
@@ -210,7 +210,7 @@ async function evaluateModel(model) {
     const accuracy = successCount > 0 ? (correctCount / QUESTIONS.length) * 100 : 0;
     const avgTime = successCount > 0 ? totalTime / successCount : 999;
 
-    console.log(`   � Result: ${accuracy.toFixed(0)}% accuracy, ${avgTime !== 999 ? avgTime.toFixed(2) + 's avg time' : 'N/A'}`);
+    console.log(`    Result: ${accuracy.toFixed(0)}% accuracy, ${avgTime !== 999 ? avgTime.toFixed(2) + 's avg time' : 'N/A'}`);
 
     return {
         model,
@@ -224,9 +224,9 @@ async function evaluateModel(model) {
 // 5. Main Runner
 async function runBenchmark() {
     const models = loadModels();
-    console.log(`🚀 Starting Deep Benchmark for ${models.length} models...`);
-    console.log(`ℹ️  Evaluating ${QUESTIONS.length} complex questions per model.`);
-    console.log(`ℹ️  Delaying 2s between questions and 5s between models.\n`);
+    console.log(` Starting Deep Benchmark for ${models.length} models...`);
+    console.log(`  Evaluating ${QUESTIONS.length} complex questions per model.`);
+    console.log(`  Delaying 2s between questions and 5s between models.\n`);
 
     const results = [];
 
@@ -242,7 +242,7 @@ async function runBenchmark() {
     }
 
     // Rank Results
-    console.log(`\n\n🏆 --- BENCHMARK RESULTS --- 🏆`);
+    console.log(`\n\n --- BENCHMARK RESULTS --- `);
 
     // Sort by Accuracy (Desc), then Time (Asc)
     results.sort((a, b) => {
@@ -258,14 +258,14 @@ async function runBenchmark() {
     })));
 
     // Generate CSV
-    let csvContent = "Model,Accuracy (%),Avg Time (s),Completed Requests,Errors\n";
+    let csvContent = 'Model,Accuracy (%),Avg Time (s),Completed Requests,Errors\n';
     results.forEach(r => {
-        csvContent += `"${r.model}",${r.accuracy.toFixed(2)},${r.avgTime !== 999 ? r.avgTime.toFixed(3) : 'N/A'},${r.successCount},"${r.errors}"\n`;
+        csvContent += `'${r.model}',${r.accuracy.toFixed(2)},${r.avgTime !== 999 ? r.avgTime.toFixed(3) : 'N/A'},${r.successCount},'${r.errors}'\n`;
     });
 
     try {
         fs.writeFileSync(RESULTS_CSV, csvContent, 'utf8');
-        console.log(`\n📄 Results saved to ${RESULTS_CSV}`);
+        console.log(`\n Results saved to ${RESULTS_CSV}`);
     } catch (e) {
         console.error('Failed to save CSV:', e);
     }
@@ -279,7 +279,7 @@ async function runBenchmark() {
     const solverModels = workingModels.filter(r => r.avgTime < SPEED_THRESHOLD).map(r => r.model);
     const extractionModels = workingModels.filter(r => r.avgTime >= SPEED_THRESHOLD || r.avgTime === 999).map(r => r.model);
 
-    console.log(`\n🧹 Found ${solverModels.length} Solvers, ${extractionModels.length} Extractors, and ${failedModels.length} Failed models. Updating files...`);
+    console.log(`\n Found ${solverModels.length} Solvers, ${extractionModels.length} Extractors, and ${failedModels.length} Failed models. Updating files...`);
 
     try {
         // Write solver models back to Models.txt
@@ -288,8 +288,8 @@ async function runBenchmark() {
         // Write extraction models to Extraction_Models.txt
         fs.writeFileSync(EXTRACT_FILE, extractionModels.map(m => m + ',').join('\n'), 'utf8');
 
-        console.log(`   ✅ Solver models saved to Models.txt`);
-        console.log(`   ✅ Extraction models saved to Extraction_Models.txt`);
+        console.log(`    Solver models saved to Models.txt`);
+        console.log(`    Extraction models saved to Extraction_Models.txt`);
 
         if (failedModels.length > 0) {
             // Append failed models to failed_models.txt
@@ -303,16 +303,16 @@ async function runBenchmark() {
             }
             const allFailed = [...new Set([...existingFailed, ...failedModels])];
             fs.writeFileSync(FAILED_FILE, allFailed.map(m => m + ',').join('\n'), 'utf8');
-            console.log(`   🚫 Failed models moved to failed_models.txt`);
+            console.log(`    Failed models moved to failed_models.txt`);
         }
     } catch (e) {
-        console.error('   ❌ Error updating model files:', e);
+        console.error('    Error updating model files:', e);
     }
 
-    console.log(`\n📌 Recommended Top 5 Solvers (Copy into AiService.js):`);
+    console.log(`\n Recommended Top 5 Solvers (Copy into AiService.js):`);
     solverModels.slice(0, 5).forEach(m => console.log(`'${m}',`));
 
-    console.log(`\n📌 Recommended Extractors (Copy into AiService.js):`);
+    console.log(`\n Recommended Extractors (Copy into AiService.js):`);
     extractionModels.forEach(m => console.log(`'${m}',`));
 }
 

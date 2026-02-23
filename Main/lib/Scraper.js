@@ -37,11 +37,11 @@ function extractQuestionsServer(html) {
         const options = [];
 
         // Search inputs (Radio/Checkbox)
-        $(element).find('input[type="radio"], input[type="checkbox"]').each((i, input) => {
+        $(element).find("input[type='radio'], input[type='checkbox']").each((i, input) => {
             const inputId = $(input).attr('id');
 
             // Try to find label (either via 'for' attribute or parent)
-            let labelText = cleanText($(element).find(`label[for="${inputId}"]`).text());
+            let labelText = cleanText($(element).find(`label[for='${inputId}']`).text());
             if (!labelText) {
                 labelText = cleanText($(input).closest('.r0, .r1, div').text());
             }
@@ -76,10 +76,10 @@ function extractQuestionsServer(html) {
  */
 function extractQuestionsClipboard(rawHtml) {
     // Split by ID anchor or fallback to class
-    let blocks = rawHtml.split('id="question-').slice(1);
+    let blocks = rawHtml.split("id='question-").slice(1);
 
     if (blocks.length === 0) {
-        blocks = rawHtml.split('class="que ').slice(1);
+        blocks = rawHtml.split("class='que ").slice(1);
     }
 
     if (blocks.length === 0) {
@@ -87,11 +87,11 @@ function extractQuestionsClipboard(rawHtml) {
     }
 
     return blocks.map((block, i) => {
-        const qMatch = block.match(/<div class="qtext">([\s\S]*?)<\/div>/i);
-        const qText = ultraCleanHtml(qMatch ? qMatch[1] : "Frage nicht gefunden (Parse Error)");
+        const qMatch = block.match(/<div class='qtext'>([\s\S]*?)<\/div>/i);
+        const qText = ultraCleanHtml(qMatch ? qMatch[1] : 'Frage nicht gefunden (Parse Error)');
 
         // Find options
-        const optionMatches = [...block.matchAll(/<div[^>]*class="flex-fill[^>]*>([\s\S]*?)<\/div>/gi)];
+        const optionMatches = [...block.matchAll(/<div[^>]*class='flex-fill[^>]*>([\s\S]*?)<\/div>/gi)];
         let options = optionMatches.map(m => ultraCleanHtml(m[1]));
 
         if (options.length === 0) {

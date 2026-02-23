@@ -13,7 +13,7 @@ require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') }
 
 const API_KEY = process.env.OPENROUTER_API_KEY;
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL_SOLVER = process.env.MODEL_SOLVER || 'deepseek/deepseek-r1-0528:free';
+const MODEL_SOLVER = process.env.MODEL_SOLVER || 'qwen/qwen3-vl-30b-a3b-thinking';
 
 /**
  * Extracts valid JSON from an AI response text that might contain markdown or 'thinking' tags.
@@ -45,35 +45,35 @@ function extractJson(aiText) {
  * @returns {Promise<string|null>} The raw AI content string or null on failure
  */
 const EXTRACTION_MODELS = [
-    'deepseek/deepseek-r1-0528:free' // Highly capable reasoning model for parsing huge contexts
+    'stepfun/step-3.5-flash:free' // Highly capable reasoning model for parsing huge contexts
 ];
 
 const SOLVER_MODELS = [
-    'arcee-ai/trinity-large-preview:free', // Top accuracy, fastest time
-    'arcee-ai/trinity-mini:free',
+    'arcee-ai/trinity-large-preview:free',
+    'stepfun/step-3.5-flash:free', // Top accuracy, fastest time
     'nvidia/nemotron-3-nano-30b-a3b:free',
     'nvidia/nemotron-nano-9b-v2:free',
-    'stepfun/step-3.5-flash:free',
+    'arcee-ai/trinity-mini:free',
     'z-ai/glm-4.5-air:free',
     'liquid/lfm-2.5-1.2b-thinking:free' // Smaller thinking model
 ];
 
-// NO ROTATION: Immediately use the fastest model directly
-async function askAiWithRetry(messages, customTemperature = 0) {
+// NO ROTATION: Immediately use the specific model
+async function askAiWithRetry(messages, customTemperature = 0, specificModel = null) {
     if (!API_KEY) {
-        console.error("❌ ERROR: OPENROUTER_API_KEY is missing in .env file.");
+        console.error(' ERROR: OPENROUTER_API_KEY is missing in .env file.');
         return null;
     }
 
-    const targetModel = SOLVER_MODELS[0] || 'arcee-ai/trinity-mini:free';
+    const targetModel = specificModel || SOLVER_MODELS[0] || 'arcee-ai/trinity-mini:free';
 
-    console.log(`\n⚡ SOLVER ACTION: Instantly executing with fastest model: ${targetModel}\n`);
+    console.log(`\n SOLVER ACTION: Instantly executing with model: ${targetModel}\n`);
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000); // Fast fail if it hangs 15s
 
     try {
-        console.log(`📡 Sending request to AI (${targetModel})...`);
+        console.log(` Sending request to AI (${targetModel})...`);
         const startTime = Date.now();
 
         const requestBody = {
@@ -100,19 +100,24 @@ async function askAiWithRetry(messages, customTemperature = 0) {
         const duration = ((Date.now() - startTime) / 1000).toFixed(2);
 
         if (response.ok) {
-            console.log(`⏱️ Success! Model ${targetModel} took ${duration} seconds.`);
             const json = await response.json();
-            logToFile(`--- SOLVER (${targetModel}) RAW JSON RESPONSE ---\n${JSON.stringify(json, null, 2)}`);
-            return json.choices?.[0]?.message?.content || null;
+            if (json.error) {
+                console.warn(` Model ${targetModel} instantly failed with API error: ${json.error.message || JSON.stringify(json.error)}`);
+                return null;
+            } else {
+                console.log(` Success! Model ${targetModel} took ${duration} seconds.`);
+                logToFile(`--- SOLVER (${targetModel}) RAW JSON RESPONSE ---\n${JSON.stringify(json, null, 2)}`);
+                return json.choices?.[0]?.message?.content || null;
+            }
         }
 
         const errorText = await response.text();
-        console.warn(`⚠️ Model ${targetModel} instantly failed (${response.status}): ${errorText}`);
+        console.warn(` Model ${targetModel} instantly failed (${response.status}): ${errorText}`);
         return null;
 
     } catch (error) {
         clearTimeout(timeoutId);
-        console.error(`❌ Network error with ${targetModel}: ${error.message}`);
+        console.error(` Network error with ${targetModel}: ${error.message}`);
         return null;
     }
 }
@@ -123,12 +128,12 @@ async function askAiWithRetry(messages, customTemperature = 0) {
  */
 async function askSpecificAi(model, messages, customTemperature = 0.1) {
     if (!API_KEY) {
-        console.error("❌ ERROR: OPENROUTER_API_KEY is missing in .env file.");
+        console.error(' ERROR: OPENROUTER_API_KEY is missing in .env file.');
         return null;
     }
 
     try {
-        console.log(`📡 Sending targeted request to AI (${model})...`);
+        console.log(` Sending targeted request to AI (${model})...`);
         const startTime = Date.now();
 
         const requestBody = {
@@ -153,25 +158,30 @@ async function askSpecificAi(model, messages, customTemperature = 0.1) {
         const duration = ((Date.now() - startTime) / 1000).toFixed(2);
 
         if (response.ok) {
-            console.log(`⏱️ Success! Extractor ${model} took ${duration} s.`);
             const json = await response.json();
-            logToFile(`--- EXTRACTOR (${model}) RAW JSON RESPONSE ---\n${JSON.stringify(json, null, 2)}`);
-            return json.choices?.[0]?.message?.content || null;
+            if (json.error) {
+                console.warn(`⚠️ Extractor ${model} returned an API error: ${json.error.message || JSON.stringify(json.error)}`);
+                logToFile(`--- EXTRACTOR (${model}) ERROR RESPONSE ---\n${JSON.stringify(json, null, 2)}`);
+            } else {
+                console.log(`⏱️ Success! Extractor ${model} took ${duration} s.`);
+                logToFile(`--- EXTRACTOR (${model}) RAW JSON RESPONSE ---\n${JSON.stringify(json, null, 2)}`);
+                return json.choices?.[0]?.message?.content || null;
+            }
         }
 
         const errorText = await response.text();
-        console.warn(`⚠️ Extractor ${model} failed (${response.status}): ${errorText}`);
+        console.warn(` Extractor ${model} failed (${response.status}): ${errorText}`);
 
         // Primitive fallback if the main extractor fails
         if (model === EXTRACTION_MODELS[0] && EXTRACTION_MODELS.length > 1) {
-            console.log(`🔄 Trying backup extractor...`);
+            console.log(` Trying backup extractor...`);
             return await askSpecificAi(EXTRACTION_MODELS[1], messages, customTemperature);
         }
 
         return null;
 
     } catch (error) {
-        console.error(`❌ Network error with Extractor ${model}: ${error.message}`);
+        console.error(` Network error with Extractor ${model}: ${error.message}`);
         return null;
     }
 }
@@ -180,5 +190,6 @@ module.exports = {
     askAiWithRetry,
     askSpecificAi,
     extractJson,
-    EXTRACTION_MODELS
+    EXTRACTION_MODELS,
+    SOLVER_MODELS
 };

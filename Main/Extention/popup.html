@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Solver Settings</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 16px;
+            width: 250px;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        h2 {
+            margin-top: 0;
+            margin-bottom: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #202124;
+            display: flex;
+            align-items: center;
+        }
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-top: 1px solid #e0e0e0;
+        }
+        .setting-label {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .setting-description {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+        /* Toggle Switch Styles */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+        input:focus + .slider {
+            box-shadow: 0 0 1px #2196F3;
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+    </style>
+</head>
+<body>
+    <h2>Solver Extension</h2>
+    <div class="setting-row">
+        <div>
+            <div class="setting-label">Debug Mode</div>
+            <div class="setting-description">Show visual indicators.</div>
+        </div>
+        <label class="switch">
+            <input type="checkbox" id="debugToggle">
+            <span class="slider"></span>
+        </label>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html>
