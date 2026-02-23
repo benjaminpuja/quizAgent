@@ -26,3 +26,7 @@ keys.txt
 *.sln
 *.sw?
 .DS_Store
+
+# Logs
+logs.txt
+Main/logs.txt
