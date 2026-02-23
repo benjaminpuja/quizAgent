@@ -1,6 +1,9 @@
-// Configuration
-const SERVER_URL = 'http://localhost:3000/solve';
-const PING_URL = 'http://localhost:3000/ping';
+// ─────────────────────────────────────────────────────────────────────────────
+// NOTE: All fetch() calls are proxied through background.js (service worker)
+// because this content script runs inside an HTTPS page. Chrome blocks HTTP
+// requests (to localhost) made from HTTPS contexts as Mixed Content.
+// The service worker is NOT subject to this restriction.
+// ─────────────────────────────────────────────────────────────────────────────
 
 // --- VISUAL DEBUG BOX ---
 let isDebugMode = true; // Default
@@ -15,7 +18,7 @@ Object.assign(debugBox.style, {
     pointerEvents: 'none', border: '1px solid #0f0',
     minWidth: '220px', boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
     transition: 'opacity 0.5s ease-in-out',
-    display: 'none' // hidden until we know debug state
+    display: 'none'
 });
 debugBox.innerHTML = "[Solver]: Ready (Waiting for Shortcut)";
 document.body.appendChild(debugBox);
@@ -25,7 +28,7 @@ statusIndicator.id = "moodle-solver-indicator";
 Object.assign(statusIndicator.style, {
     position: 'fixed', bottom: '10px', left: '10px',
     width: '12px', height: '12px', borderRadius: '50%',
-    backgroundColor: 'red', // Default red until connected
+    backgroundColor: 'red',
     zIndex: '9999999', pointerEvents: 'none',
     boxShadow: '0 0 6px red',
     transition: 'background-color 0.3s, box-shadow 0.3s',
@@ -43,13 +46,12 @@ function updateIndicator(color) {
     statusIndicator.style.boxShadow = `0 0 8px ${color}`;
 }
 
-// Initial fetch
+// Load debug mode preference
 chrome.storage.local.get(['debugMode'], (result) => {
     isDebugMode = result.debugMode !== false;
     updateDebugVisibility();
 });
 
-// Listen for settings change
 chrome.storage.onChanged.addListener((changes, namespace) => {
     if (namespace === 'local' && changes.debugMode !== undefined) {
         isDebugMode = changes.debugMode.newValue;
@@ -60,152 +62,180 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 function logStatus(msg, color = '#0f0') {
     console.log(`[Solver] ${msg}`);
     if (!isDebugMode) return;
-
     debugBox.style.color = color;
     debugBox.style.borderColor = color;
     debugBox.innerHTML = `> ${msg}`;
     debugBox.style.opacity = '1';
 }
 
-// 1. Initial Test: Is Server Alive?
-// 1. Initial Test: Is Server Alive?
-// 1. Initial Test: Is Server Alive?
-fetch(PING_URL, { cache: 'no-store' }) // Disable caching
-    .then(async (response) => {
-        if (!response.ok) throw new Error(`Status ${response.status}`);
-        const data = await response.json();
-        if (data.status !== 'alive') throw new Error('Invalid Server Response');
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPER: Open a port to the background service worker
+// ─────────────────────────────────────────────────────────────────────────────
+function openProxyPort() {
+    return chrome.runtime.connect({ name: 'solver-proxy' });
+}
 
-        logStatus(' Connected to Server', '#0f0');
-        updateIndicator('#0f0'); // Green
-        // Hide after 3 seconds if idle
-        setTimeout(() => {
-            if (debugBox.innerHTML.includes('Connected')) debugBox.style.opacity = '0.5';
-        }, 3000);
-    })
-    .catch((err) => {
-        console.warn('Ping failed:', err);
-        logStatus(' Server unreachable (Is Node.js running?)', '#f00');
-        updateIndicator('red');
+// ─────────────────────────────────────────────────────────────────────────────
+// 1. PING — routed through background.js to avoid mixed-content block
+// ─────────────────────────────────────────────────────────────────────────────
+(function pingServer() {
+    const port = openProxyPort();
+
+    port.onMessage.addListener((msg) => {
+        if (msg.type === 'ping_ok') {
+            logStatus(' Connected to Server', '#0f0');
+            updateIndicator('#0f0');
+            setTimeout(() => {
+                if (debugBox.innerHTML.includes('Connected')) debugBox.style.opacity = '0.5';
+            }, 3000);
+        } else if (msg.type === 'ping_fail') {
+            console.warn('Ping failed:', msg.error);
+            logStatus(' Server unreachable (Is Node.js running?)', '#f00');
+            updateIndicator('red');
+        }
+        port.disconnect();
     });
 
+    port.onDisconnect.addListener(() => {
+        if (chrome.runtime.lastError) {
+            console.warn('Ping port disconnected with error:', chrome.runtime.lastError.message);
+            logStatus(' Server unreachable (Is Node.js running?)', '#f00');
+            updateIndicator('red');
+        }
+    });
 
-// 2. Listener for Shortcut
-let activeController = null;
+    port.postMessage({ action: 'ping' });
+})();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 2. SHORTCUT LISTENER
+// ─────────────────────────────────────────────────────────────────────────────
+let activePort = null;
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'trigger_solver') {
         runSolver();
-        // Send receipt back to background.js
         sendResponse({ status: 'received' });
     } else if (request.action === 'stop_solver') {
-        if (activeController) {
+        if (activePort) {
             logStatus(' Cancelled manually by User.', 'orange');
-            updateIndicator('#0f0'); // Back to green/ready
-            activeController.abort();
-            activeController = null;
+            updateIndicator('#0f0');
+            activePort.postMessage({ action: 'abort' });
+            activePort.disconnect();
+            activePort = null;
         }
     }
     return true;
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 3. SOLVER — streams via port from background.js
+// ─────────────────────────────────────────────────────────────────────────────
 async function runSolver() {
     logStatus(' Shortcut! Sending HTML...', 'yellow');
     updateIndicator('yellow');
 
-    // Send the entire DOM to the server
-    // The server handles all scraping logic (via Scraper.js)
     const htmlContent = document.documentElement.outerHTML;
 
-    try {
-        if (activeController) {
-            activeController.abort();
-        }
-        activeController = new AbortController();
+    // Abort any previous solve
+    if (activePort) {
+        activePort.postMessage({ action: 'abort' });
+        activePort.disconnect();
+        activePort = null;
+    }
 
-        const response = await fetch(SERVER_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ html: htmlContent }),
-            signal: activeController.signal
-        });
+    const port = openProxyPort();
+    activePort = port;
 
-        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+    // Buffer to handle SSE lines split across chunks
+    let lineBuffer = '';
 
-        // Handle Chunked Streaming Response (Server-Sent Events)
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder('utf-8');
-        let isStreamDone = false;
+    port.onMessage.addListener((msg) => {
+        if (msg.type === 'chunk') {
+            // Accumulate and parse SSE lines
+            lineBuffer += msg.chunk;
+            const lines = lineBuffer.split('\n');
+            // Keep the last (possibly incomplete) line in the buffer
+            lineBuffer = lines.pop();
 
-        logStatus(' Awaiting Extraction & Solving...', 'cyan');
-
-        while (!isStreamDone) {
-            const { value, done } = await reader.read();
-            isStreamDone = done;
-
-            if (value) {
-                const chunk = decoder.decode(value, { stream: true });
-                const lines = chunk.split('\n');
-
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        try {
-                            const data = JSON.parse(line.substring(6));
-
-                            // Handle Status Updates
-                            if (data.status) {
-                                logStatus(` ${data.status} [${data.progress || ''}]`, 'cyan');
-                                if (data.progress === 'Step 1/2') {
-                                    updateIndicator('yellow');
-                                } else if (data.progress === 'Step 2/2') {
-                                    updateIndicator('blue');
-                                }
-                            }
-
-                            // Handle Instant Clicks
-                            if (data.targetId) {
-                                console.log(`[Solver] Streaming click for Q${data.questionNum}: ${data.targetId}`);
-                                // Call instantly
-                                clickAnswersSlowly([data.targetId]);
-                            }
-
-                            if (data.done) {
-                                logStatus(' All queries processed.', '#0f0');
-                                updateIndicator('#0f0');
-                                setTimeout(() => debugBox.style.opacity = '0.5', 5000);
-                            }
-
-                            if (data.error) {
-                                logStatus(` Backend Error: ${data.error}`, 'red');
-                                updateIndicator('red');
-                            }
-                        } catch (e) {
-                            console.warn('Could not parse stream line:', line);
-                        }
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    try {
+                        const data = JSON.parse(line.substring(6));
+                        handleStreamEvent(data);
+                    } catch (e) {
+                        console.warn('Could not parse stream line:', line);
                     }
                 }
             }
-        }
 
-    } catch (err) {
-        if (err.name === 'AbortError') {
-            console.log('Fetch aborted by user.');
-            // Status already set by the message listener
-        } else {
-            console.error(err);
-            logStatus(` Error: ${err.message}`, 'red');
+        } else if (msg.type === 'done') {
+            // Flush any remaining buffer
+            if (lineBuffer.startsWith('data: ')) {
+                try {
+                    const data = JSON.parse(lineBuffer.substring(6));
+                    handleStreamEvent(data);
+                } catch (_) { }
+            }
+            lineBuffer = '';
+            activePort = null;
+
+        } else if (msg.type === 'aborted') {
+            console.log('[Solver] Fetch aborted.');
+            activePort = null;
+
+        } else if (msg.type === 'error') {
+            console.error('[Solver] Proxy error:', msg.error);
+            logStatus(` Error: ${msg.error}`, 'red');
+            updateIndicator('red');
+            activePort = null;
+        }
+    });
+
+    port.onDisconnect.addListener(() => {
+        if (chrome.runtime.lastError) {
+            console.error('Solve port disconnected unexpectedly:', chrome.runtime.lastError.message);
+            logStatus(' Connection to background lost.', 'red');
             updateIndicator('red');
         }
-    } finally {
-        activeController = null;
+        activePort = null;
+    });
+
+    port.postMessage({ action: 'solve', html: htmlContent });
+    logStatus(' Awaiting Extraction & Solving...', 'cyan');
+}
+
+function handleStreamEvent(data) {
+    if (data.status) {
+        logStatus(` ${data.status} [${data.progress || ''}]`, 'cyan');
+        if (data.progress === 'Step 1/2') updateIndicator('yellow');
+        else if (data.progress === 'Step 2/2') updateIndicator('blue');
+    }
+
+    if (data.targetId) {
+        console.log(`[Solver] Streaming click for Q${data.questionNum}: ${data.targetId}`);
+        clickAnswersSlowly([data.targetId]);
+    }
+
+    if (data.done) {
+        logStatus(' All queries processed.', '#0f0');
+        updateIndicator('#0f0');
+        setTimeout(() => debugBox.style.opacity = '0.5', 5000);
+    }
+
+    if (data.error) {
+        logStatus(` Backend Error: ${data.error}`, 'red');
+        updateIndicator('red');
     }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 4. CLICK HANDLER
+// ─────────────────────────────────────────────────────────────────────────────
 async function clickAnswersSlowly(targetIds) {
     for (const id of targetIds) {
         const element = document.getElementById(id);
         if (element) {
-            // Human-like delay
             const waitTime = Math.floor(Math.random() * 800) + 400;
             await new Promise(r => setTimeout(r, waitTime));
 
@@ -213,7 +243,6 @@ async function clickAnswersSlowly(targetIds) {
             element.click();
 
             if (isDebugMode) {
-                // Visual Highlight for successfully clicked items
                 const parent = element.closest('.r0, .r1, div');
                 if (parent) {
                     parent.style.transition = "background 0.5s";
@@ -226,7 +255,5 @@ async function clickAnswersSlowly(targetIds) {
         }
     }
     logStatus(' All clicks executed.', '#0f0');
-
-    // Fade out debug box after a while
     setTimeout(() => debugBox.style.opacity = '0.5', 6000);
 }

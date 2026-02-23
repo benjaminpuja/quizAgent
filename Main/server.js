@@ -269,9 +269,10 @@ app.post('/solve', async (req, res) => {
 });
 
 // Server Start
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, '127.0.0.1', () => {
     console.log(`\n--------------------------------------------------`);
-    console.log(` DEBUG-SERVER ready at http://localhost:${PORT}`);
+    console.log(` DEBUG-SERVER ready at http://127.0.0.1:${PORT}`);
+    console.log(` Also reachable at http://localhost:${PORT}`);
     console.log(`Waiting for requests...`);
     console.log(`--------------------------------------------------\n`);
 });
