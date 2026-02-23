@@ -9,11 +9,13 @@ function logToFile(text) {
         fs.appendFileSync(LOG_FILE, `\n[${timestamp}] [SERVER] \n${text}\n--------------------------------------------------\n`);
     } catch (e) { }
 }
-require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
+require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
 
-const API_KEY = process.env.OPENROUTER_API_KEY;
+// Strip \r from env values — .env was saved on Windows with CRLF line endings,
+// which causes macOS dotenv to include '\r' as part of the value.
+const API_KEY = (process.env.OPENROUTER_API_KEY || '').trim();
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL_SOLVER = process.env.MODEL_SOLVER || 'qwen/qwen3-vl-30b-a3b-thinking';
+const MODEL_SOLVER = (process.env.MODEL_SOLVER || 'qwen/qwen3-vl-30b-a3b-thinking').trim();
 
 /**
  * Extracts valid JSON from an AI response text that might contain markdown or 'thinking' tags.
