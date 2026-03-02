@@ -1,4 +1,4 @@
-# Optional npm
+# Dependencies
 node_modules/
 npm-debug.log*
 yarn-debug.log*
@@ -11,7 +11,7 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
-# API Keys
+# API Keys & Secrets
 Keys.txt
 keys.txt
 *.key
@@ -20,15 +20,28 @@ keys.txt
 # IDEs and Editors
 .idea/
 .vscode/
+*.iml
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-.DS_Store
 
-# Logs
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Logs & Runtime files
 logs.txt
 Main/logs.txt
+*.log
+
+# Test & Benchmark output
 Main/test_results.txt
 test_results.txt
+Main/model_benchmark_results.csv
+model_benchmark_results.csv
+Main/failed_models.txt
+failed_models.txt
+Main/Extraction_Models.txt
